@@ -10,12 +10,23 @@
   "CategoryIcon": "imgs/category",
   "CodePath": "bin/plugin.js",
   "SDKVersion": 2,
-  "Software": { "MinimumVersion": "6.5" },
+  "Software": {
+    "MinimumVersion": "6.5"
+  },
   "OS": [
-    { "Platform": "windows", "MinimumVersion": "10" },
-    { "Platform": "mac", "MinimumVersion": "12" }
+    {
+      "Platform": "windows",
+      "MinimumVersion": "10"
+    },
+    {
+      "Platform": "mac",
+      "MinimumVersion": "12"
+    }
   ],
-  "Nodejs": { "Version": "20", "Debug": "disabled" },
+  "Nodejs": {
+    "Version": "20",
+    "Debug": "disabled"
+  },
   "Actions": [
     {
       "Name": "Command",
@@ -23,8 +34,15 @@
       "Icon": "imgs/action",
       "Tooltip": "Send a command to Minecraft",
       "PropertyInspectorPath": "ui/command.html",
-      "Controllers": ["Keypad"],
-      "States": [{ "Image": "imgs/key", "TitleAlignment": "middle" }]
+      "Controllers": [
+        "Keypad"
+      ],
+      "States": [
+        {
+          "Image": "imgs/key",
+          "TitleAlignment": "middle"
+        }
+      ]
     }
   ]
 }
