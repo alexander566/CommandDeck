@@ -57,7 +57,11 @@ const ws = connect(Number(args.port), text => {
   let m;
   try { m = JSON.parse(text); } catch { return; }
   const ctx = m.context;
-  if (m.event === 'willAppear' || m.event === 'didReceiveSettings') settings.set(ctx, m.payload.settings || {});
+  if (m.event === 'willAppear' || m.event === 'didReceiveSettings') {
+    settings.set(ctx, m.payload.settings || {});
+    const first = String((m.payload.settings || {}).command || '').split(/\r?\n/).map(l => l.trim()).find(Boolean) || '';
+    ws.send({ event: 'setTitle', context: ctx, payload: { title: first, target: 0 } });
+  }
   else if (m.event === 'willDisappear') settings.delete(ctx);
   else if (m.event === 'keyDown') run(ctx, m.payload.settings || settings.get(ctx) || {});
 });
