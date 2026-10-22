@@ -1,0 +1,30 @@
+{
+  "Name": "CommandDeck",
+  "Version": "1.0.0.0",
+  "Author": "alexander566",
+  "Description": "Run Minecraft chat commands from a key, straight into the game. No chat window, works on any server. Needs the CommandDeck mod (Fabric).",
+  "URL": "https://github.com/alexander566/CommandDeck",
+  "UUID": "io.github.alexander566.commanddeck",
+  "Icon": "imgs/plugin",
+  "Category": "CommandDeck",
+  "CategoryIcon": "imgs/category",
+  "CodePath": "bin/plugin.js",
+  "SDKVersion": 2,
+  "Software": { "MinimumVersion": "6.5" },
+  "OS": [
+    { "Platform": "windows", "MinimumVersion": "10" },
+    { "Platform": "mac", "MinimumVersion": "12" }
+  ],
+  "Nodejs": { "Version": "20", "Debug": "disabled" },
+  "Actions": [
+    {
+      "Name": "Command",
+      "UUID": "io.github.alexander566.commanddeck.command",
+      "Icon": "imgs/action",
+      "Tooltip": "Send a command to Minecraft",
+      "PropertyInspectorPath": "ui/command.html",
+      "Controllers": ["Keypad"],
+      "States": [{ "Image": "imgs/key", "TitleAlignment": "middle" }]
+    }
+  ]
+}

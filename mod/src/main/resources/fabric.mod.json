@@ -1,0 +1,24 @@
+{
+	"schemaVersion": 1,
+	"id": "commanddeck",
+	"version": "${version}",
+	"name": "CommandDeck",
+	"description": "Run chat commands from a Stream Deck key, straight into the game. No chat window, works on any server.",
+	"authors": ["alexander566"],
+	"contact": {
+		"sources": "https://github.com/alexander566/CommandDeck",
+		"issues": "https://github.com/alexander566/CommandDeck/issues"
+	},
+	"license": "MIT",
+	"icon": "assets/commanddeck/icon.png",
+	"environment": "client",
+	"entrypoints": {
+		"client": ["io.github.alexander566.commanddeck.CommandDeck"]
+	},
+	"depends": {
+		"fabricloader": ">=0.17.0",
+		"minecraft": "~26.2",
+		"java": ">=25",
+		"fabric-api": "*"
+	}
+}
