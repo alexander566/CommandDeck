@@ -1,5 +1,11 @@
 # CommandDeck
 
+[![Modrinth](https://img.shields.io/modrinth/dt/commanddeck?logo=modrinth&label=Modrinth&color=00AF5C)](https://modrinth.com/mod/commanddeck)
+[![Release](https://img.shields.io/github/v/release/alexander566/CommandDeck?label=Download)](https://github.com/alexander566/CommandDeck/releases/latest)
+[![License](https://img.shields.io/github/license/alexander566/CommandDeck)](LICENSE)
+
+![CommandDeck](store/gallery-1.png)
+
 Run Minecraft commands from your Stream Deck. Press a key and the command goes straight into the game: no chat window, no typing macro, any server.
 
 CommandDeck has two parts that work together:
