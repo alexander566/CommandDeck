@@ -79,13 +79,6 @@ public final class CommandDeck implements ClientModInitializer {
 				return;
 			}
 			String path = ex.getRequestURI().getPath();
-			if (path.equals("/status")) {
-				Boolean inWorld = onClient(() -> Minecraft.getInstance().player != null);
-				JsonObject o = new JsonObject();
-				o.addProperty("inWorld", Boolean.TRUE.equals(inWorld));
-				reply(ex, 200, o);
-				return;
-			}
 			if (!path.equals("/command") || !ex.getRequestMethod().equals("POST")) {
 				reply(ex, 404, "not found");
 				return;
