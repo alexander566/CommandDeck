@@ -11,7 +11,7 @@ Servers don't need to install anything.
 
 ## Install
 
-1. Download the files from the [latest release](https://github.com/alexander566/CommandDeck/releases/latest).
+1. Download the files from the [latest release](https://github.com/alexander566/CommandDeck/releases/latest) (the mod is also on [Modrinth](https://modrinth.com/mod/commanddeck)).
 2. **Mod:** put the jar for your Minecraft version in your `mods` folder. You need [Fabric Loader](https://fabricmc.net/use/) (Quilt works too). Fabric API is not needed.
 
    | Minecraft | File |
