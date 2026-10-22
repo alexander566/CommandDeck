@@ -1,6 +1,6 @@
 {
   "Name": "CommandDeck",
-  "Version": "1.0.0.0",
+  "Version": "1.0.1.0",
   "Author": "alexander566",
   "Description": "Run Minecraft chat commands from a key, straight into the game. No chat window, works on any server. Needs the CommandDeck mod (Fabric).",
   "URL": "https://github.com/alexander566/CommandDeck",
@@ -9,9 +9,9 @@
   "Category": "CommandDeck",
   "CategoryIcon": "imgs/category",
   "CodePath": "bin/plugin.js",
-  "SDKVersion": 2,
+  "SDKVersion": 3,
   "Software": {
-    "MinimumVersion": "6.5"
+    "MinimumVersion": "6.9"
   },
   "OS": [
     {
