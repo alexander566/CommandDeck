@@ -7,11 +7,9 @@ import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpServer;
 import net.fabricmc.api.ClientModInitializer;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.player.LocalPlayer;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.InetAddress;
@@ -19,23 +17,27 @@ import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * Listens on 127.0.0.1 for commands from the CommandDeck Stream Deck plugin and sends them as if typed in chat.
  * The OS picks a free port; port + a random token go into ~/.commanddeck/<pid>.json for the plugin to find.
  * Requests need that token and must not carry an Origin header, so web pages in a browser cannot reach it.
+ * Kept to Java 8 so the same file builds for every Minecraft version; only {@link Send} differs per version.
  */
 public final class CommandDeck implements ClientModInitializer {
 
-	public static final Logger LOG = LoggerFactory.getLogger("CommandDeck");
+	public static final Logger LOG = Logger.getLogger("CommandDeck");
 	private static final int MAX_BODY = 8192;
 	private static final Gson GSON = new Gson();
-	private static final Path DIR = Path.of(System.getProperty("user.home"), ".commanddeck");
+	private static final Path DIR = Paths.get(System.getProperty("user.home"), ".commanddeck");
 
-	private final String token = java.util.HexFormat.of().formatHex(new java.security.SecureRandom().generateSeed(16));
+	private final String token = String.format("%032x", new java.math.BigInteger(1, new java.security.SecureRandom().generateSeed(16)));
 
 	@Override
 	public void onInitializeClient() {
@@ -49,27 +51,27 @@ public final class CommandDeck implements ClientModInitializer {
 			}));
 			server.start();
 			int port = server.getAddress().getPort();
-			Path file = DIR.resolve(ProcessHandle.current().pid() + ".json");
+			Path file = DIR.resolve(java.lang.management.ManagementFactory.getRuntimeMXBean().getName().split("@")[0] + ".json");
 			JsonObject o = new JsonObject();
 			o.addProperty("port", port);
 			o.addProperty("token", token);
 			o.addProperty("started", System.currentTimeMillis());
 			Files.createDirectories(DIR);
-			Files.writeString(file, GSON.toJson(o));
+			Files.write(file, GSON.toJson(o).getBytes(StandardCharsets.UTF_8));
 			Runtime.getRuntime().addShutdownHook(new Thread(() -> {
 				try {
 					Files.deleteIfExists(file);
 				} catch (IOException ignored) {
 				}
 			}));
-			LOG.info("Listening on 127.0.0.1:{}", port);
+			LOG.info("Listening on 127.0.0.1:" + port);
 		} catch (IOException e) {
-			LOG.error("Could not start CommandDeck", e);
+			LOG.log(Level.SEVERE, "Could not start CommandDeck", e);
 		}
 	}
 
 	private void handle(HttpExchange ex) throws IOException {
-		try (ex) {
+		try {
 			if (ex.getRequestHeaders().containsKey("Origin")) {
 				reply(ex, 403, "browser requests are not allowed");
 				return;
@@ -85,12 +87,17 @@ public final class CommandDeck implements ClientModInitializer {
 			}
 			String command;
 			try (InputStream in = ex.getRequestBody()) {
-				byte[] body = in.readNBytes(MAX_BODY + 1);
+				ByteArrayOutputStream buf = new ByteArrayOutputStream();
+				byte[] chunk = new byte[1024];
+				for (int n; buf.size() <= MAX_BODY && (n = in.read(chunk)) > 0; ) {
+					buf.write(chunk, 0, n);
+				}
+				byte[] body = buf.toByteArray();
 				if (body.length > MAX_BODY) {
 					reply(ex, 413, "too large");
 					return;
 				}
-				command = JsonParser.parseString(new String(body, StandardCharsets.UTF_8)).getAsJsonObject().get("command").getAsString().strip();
+				command = new JsonParser().parse(new String(body, StandardCharsets.UTF_8)).getAsJsonObject().get("command").getAsString().trim();
 			} catch (Exception e) {
 				reply(ex, 400, "expected {\"command\": \"...\"}");
 				return;
@@ -99,7 +106,8 @@ public final class CommandDeck implements ClientModInitializer {
 				reply(ex, 400, "empty command");
 				return;
 			}
-			Boolean sent = onClient(() -> send(command));
+			String c = command;
+			Boolean sent = onClient(() -> Send.send(c));
 			if (sent == null) {
 				reply(ex, 503, "game did not respond");
 			} else if (!sent) {
@@ -107,21 +115,9 @@ public final class CommandDeck implements ClientModInitializer {
 			} else {
 				reply(ex, 200, "sent");
 			}
+		} finally {
+			ex.close();
 		}
-	}
-
-	private static boolean send(String command) {
-		Minecraft mc = Minecraft.getInstance();
-		LocalPlayer player = mc.player;
-		if (player == null) {
-			return false;
-		}
-		if (command.startsWith("/")) {
-			player.connection.sendCommand(command.substring(1));
-		} else {
-			player.connection.sendChat(command);
-		}
-		return true;
 	}
 
 	private static <T> T onClient(java.util.function.Supplier<T> task) {

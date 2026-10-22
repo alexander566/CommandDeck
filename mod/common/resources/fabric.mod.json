@@ -16,9 +16,8 @@
 		"client": ["io.github.alexander566.commanddeck.CommandDeck"]
 	},
 	"depends": {
-		"fabricloader": ">=0.17.0",
-		"minecraft": "~26.2",
-		"java": ">=25",
-		"fabric-api": "*"
+		"fabricloader": ">=0.12.0",
+		"minecraft": "${mc_range}",
+		"java": ">=${java}"
 	}
 }

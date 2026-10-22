@@ -1,0 +1,36 @@
+plugins {
+	id 'net.fabricmc.fabric-loom-remap' version '1.18.4'
+}
+
+base {
+	archivesName = "commanddeck-fabric"
+}
+
+version = "${mod_version}+mc1.19-1.19.2"
+def mcRange = '>=1.19 <1.19.3'
+def javaMin = '17'
+
+sourceSets.main.java.srcDirs = ['../../common/java', 'src']
+sourceSets.main.resources.srcDirs = ['../../common/resources']
+
+dependencies {
+	minecraft "com.mojang:minecraft:1.19.2"
+	mappings loom.officialMojangMappings()
+	modImplementation "net.fabricmc:fabric-loader:0.14.11"
+}
+
+processResources {
+	def props = [version: project.version, mc_range: mcRange, java: javaMin]
+	inputs.properties props
+	filesMatching("fabric.mod.json") {
+		expand props
+	}
+}
+
+tasks.withType(JavaCompile).configureEach {
+	it.options.release = 17
+}
+
+jar {
+	from("../../LICENSE")
+}

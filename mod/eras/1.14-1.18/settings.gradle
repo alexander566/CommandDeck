@@ -5,5 +5,4 @@ pluginManagement {
 		gradlePluginPortal()
 	}
 }
-
-rootProject.name = 'commanddeck'
+rootProject.name = 'commanddeck-1.14-1.18'
