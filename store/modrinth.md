@@ -3,7 +3,7 @@
 ![CommandDeck](https://raw.githubusercontent.com/alexander566/CommandDeck/main/store/gallery-1.png)
 
 ## Setup
-1. Install this mod (Fabric or Quilt, no Fabric API needed).
+1. Install this mod (Fabric, Quilt, NeoForge or Forge; no Fabric API needed).
 2. Install the free [Stream Deck plugin](https://github.com/alexander566/CommandDeck/releases/latest) (`CommandDeck.streamDeckPlugin`).
 3. Drag **CommandDeck › Command** onto a key, type a command like `/spawn`, join a world and press it.
 
