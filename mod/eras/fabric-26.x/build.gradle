@@ -1,0 +1,36 @@
+plugins {
+	id 'net.fabricmc.fabric-loom' version '1.18.4'
+}
+
+base {
+	archivesName = "commanddeck"
+}
+
+version = "${mod_version}+fabric-mc26.x"
+def mcRange = '>=26.1'
+def javaMin = '25'
+
+sourceSets.main.java.srcDirs = ['../../common/java', '../../send/modern', '../../loader/fabric/java']
+sourceSets.main.resources.srcDirs = ['../../common/resources', '../../loader/fabric/resources']
+
+dependencies {
+	minecraft "com.mojang:minecraft:26.1"
+
+	implementation "net.fabricmc:fabric-loader:0.19.3"
+}
+
+processResources {
+	def props = [version: project.version, mc_range: mcRange, java: javaMin]
+	inputs.properties props
+	filesMatching("fabric.mod.json") {
+		expand props
+	}
+}
+
+tasks.withType(JavaCompile).configureEach {
+	it.options.release = 25
+}
+
+jar {
+	from("../../LICENSE")
+}

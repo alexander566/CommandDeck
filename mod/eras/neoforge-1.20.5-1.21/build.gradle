@@ -1,0 +1,33 @@
+plugins {
+	id 'java'
+	id 'net.neoforged.moddev' version '2.0.148'
+}
+
+base {
+	archivesName = "commanddeck"
+}
+
+version = "${mod_version}+neoforge-mc1.20.5-1.21"
+
+sourceSets.main.java.srcDirs = ['../../common/java', '../../send/modern', '../../loader/neoforge/java']
+sourceSets.main.resources.srcDirs = ['../../common/resources', '../../loader/neoforge/resources']
+
+neoForge {
+	version = project.findProperty('nfVersion') ?: '21.1.264'
+}
+
+processResources {
+	def props = [version: project.version, mc_range: '[1.20.5,26)']
+	inputs.properties props
+	filesMatching("META-INF/neoforge.mods.toml") {
+		expand props
+	}
+}
+
+tasks.withType(JavaCompile).configureEach {
+	it.options.release = 21
+}
+
+jar {
+	from("../../LICENSE")
+}

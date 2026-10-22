@@ -5,7 +5,6 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpServer;
-import net.fabricmc.api.ClientModInitializer;
 import net.minecraft.client.Minecraft;
 
 import java.io.IOException;
@@ -30,20 +29,31 @@ import java.util.logging.Logger;
  * Requests need that token and must not carry an Origin header, so web pages in a browser cannot reach it.
  * Kept to Java 8 so the same file builds for every Minecraft version; only {@link Send} differs per version.
  */
-public final class CommandDeck implements ClientModInitializer {
+public final class CommandDeck {
 
 	public static final Logger LOG = Logger.getLogger("CommandDeck");
 	private static final int MAX_BODY = 8192;
 	private static final Gson GSON = new Gson();
 	private static final Path DIR = Paths.get(System.getProperty("user.home"), ".commanddeck");
 
-	private final String token = String.format("%032x", new java.math.BigInteger(1, new java.security.SecureRandom().generateSeed(16)));
+	private static final String token = String.format("%032x", new java.math.BigInteger(1, new java.security.SecureRandom().generateSeed(16)));
 
-	@Override
-	public void onInitializeClient() {
+	private static boolean started;
+
+	/** Called by each loader's entry class; does nothing on a dedicated server. */
+	public static synchronized void start() {
+		if (started) {
+			return;
+		}
+		started = true;
+		try {
+			Class.forName("net.minecraft.client.Minecraft", false, CommandDeck.class.getClassLoader());
+		} catch (ClassNotFoundException e) {
+			return;
+		}
 		try {
 			HttpServer server = HttpServer.create(new InetSocketAddress(InetAddress.getLoopbackAddress(), 0), 0);
-			server.createContext("/", this::handle);
+			server.createContext("/", CommandDeck::handle);
 			server.setExecutor(Executors.newSingleThreadExecutor(r -> {
 				Thread t = new Thread(r, "CommandDeck");
 				t.setDaemon(true);
@@ -70,7 +80,7 @@ public final class CommandDeck implements ClientModInitializer {
 		}
 	}
 
-	private void handle(HttpExchange ex) throws IOException {
+	private static void handle(HttpExchange ex) throws IOException {
 		try {
 			if (ex.getRequestHeaders().containsKey("Origin")) {
 				reply(ex, 403, "browser requests are not allowed");

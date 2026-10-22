@@ -10,7 +10,7 @@ Run Minecraft commands from your Stream Deck. Press a key and the command goes s
 
 CommandDeck has two parts that work together:
 
-- **CommandDeck mod** (Fabric, client side): receives commands from the Stream Deck and sends them as if you typed them.
+- **CommandDeck mod** (Fabric, Quilt, NeoForge, Forge; client side): receives commands from the Stream Deck and sends them as if you typed them.
 - **CommandDeck Stream Deck plugin**: a **Command** key you can fill with any command.
 
 Servers don't need to install anything.
@@ -18,14 +18,18 @@ Servers don't need to install anything.
 ## Install
 
 1. Download the files from the [latest release](https://github.com/alexander566/CommandDeck/releases/latest) (the mod is also on [Modrinth](https://modrinth.com/mod/commanddeck)).
-2. **Mod:** put the jar for your Minecraft version in your `mods` folder. You need [Fabric Loader](https://fabricmc.net/use/) (Quilt works too). Fabric API is not needed.
+2. **Mod:** put the jar for your loader and Minecraft version in your `mods` folder (or get it from [Modrinth](https://modrinth.com/mod/commanddeck), which picks the right one).
 
-   | Minecraft | File |
-   |---|---|
-   | 26.1 and newer | `commanddeck-fabric-…+mc26.x.jar` |
-   | 1.19.3 – 1.21.11 | `commanddeck-fabric-…+mc1.19.3-1.21.jar` |
-   | 1.19 – 1.19.2 | `commanddeck-fabric-…+mc1.19-1.19.2.jar` |
-   | 1.14 – 1.18.2 | `commanddeck-fabric-…+mc1.14-1.18.jar` |
+   | Minecraft | Fabric / Quilt | NeoForge | Forge |
+   |---|---|---|---|
+   | 26.1 and newer | `+fabric-mc26.x` | `+neoforge-mc26.x` | `+forge-mc26.x` |
+   | 1.20.5 / 1.20.6 – 1.21.11 | `+fabric-mc1.19.3-1.21` | `+neoforge-mc1.20.5-1.21` | `+forge-mc1.20.6-1.21` |
+   | 1.19.3 – 1.20.4 | `+fabric-mc1.19.3-1.21` | – | `+forge-mc1.19.3-1.20.4` |
+   | 1.19 – 1.19.2 | `+fabric-mc1.19-1.19.2` | – | `+forge-mc1.19.1-1.19.2` (1.19.1+) |
+   | 1.18 – 1.18.2 | `+fabric-mc1.14-1.18` | – | `+forge-mc1.18-1.18.2` |
+   | 1.14 – 1.17.1 | `+fabric-mc1.14-1.18` | – | – |
+
+   Fabric needs no Fabric API. Quilt uses the Fabric jar.
 
 3. **Stream Deck plugin:** double-click `CommandDeck.streamDeckPlugin`.
 
@@ -56,7 +60,7 @@ Needs JDK 25.
 ./build-all.sh
 ```
 
-Jars and `CommandDeck.streamDeckPlugin` end up in `dist/`. Each folder in `mod/eras/` builds one version range from the shared code in `mod/common/`; only `Send.java` differs between them.
+Jars and `CommandDeck.streamDeckPlugin` end up in `dist/`. `mod/common/` is shared by every build; `mod/send/` holds the three ways Minecraft sends chat across versions; `mod/loader/` has one small entry class per loader; each folder in `mod/eras/` builds one jar. Forge 1.20.6+ runs on Mojang names like NeoForge, so `mod/pack-forge-mojmap.sh` reuses the NeoForge classes for it.
 
 ## License
 

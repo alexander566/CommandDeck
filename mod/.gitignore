@@ -38,3 +38,5 @@ hs_err_*.log
 replay_*.log
 *.hprof
 *.jfr
+eras/forge-1.20.6-1.21/
+eras/forge-26.x/

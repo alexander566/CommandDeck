@@ -1,0 +1,33 @@
+plugins {
+	id 'java'
+	id 'net.neoforged.moddev.legacyforge' version '2.0.148'
+}
+
+base {
+	archivesName = "commanddeck"
+}
+
+version = "${mod_version}+forge-mc1.18-1.18.2"
+
+sourceSets.main.java.srcDirs = ['../../common/java', '../../send/chat', '../../loader/forge/java']
+sourceSets.main.resources.srcDirs = ['../../common/resources', '../../loader/forge/resources']
+
+legacyForge {
+	version = project.findProperty('forgeVersion') ?: '1.18.2-40.3.0'
+}
+
+processResources {
+	def props = [version: project.version, mc_range: '[1.18,1.19)']
+	inputs.properties props
+	filesMatching("META-INF/mods.toml") {
+		expand props
+	}
+}
+
+tasks.withType(JavaCompile).configureEach {
+	it.options.release = 17
+}
+
+jar {
+	from("../../LICENSE")
+}

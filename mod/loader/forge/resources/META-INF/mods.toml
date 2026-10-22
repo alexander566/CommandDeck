@@ -1,0 +1,21 @@
+modLoader = "javafml"
+loaderVersion = "[1,)"
+license = "MIT"
+issueTrackerURL = "https://github.com/alexander566/CommandDeck/issues"
+
+[[mods]]
+modId = "commanddeck"
+version = "${version}"
+displayName = "CommandDeck"
+displayURL = "https://github.com/alexander566/CommandDeck"
+logoFile = "assets/commanddeck/icon.png"
+authors = "alexander566"
+description = "Run chat commands from a Stream Deck key, straight into the game. No chat window, works on any server."
+displayTest = "IGNORE_ALL_VERSION"
+
+[[dependencies.commanddeck]]
+modId = "minecraft"
+type = "required"
+versionRange = "${mc_range}"
+ordering = "NONE"
+side = "CLIENT"
