@@ -12,15 +12,13 @@ p { margin: 8px 0 0; color: #8a8a8a; font-size: 12px; line-height: 1.5; }
 <label for="command">Command</label>
 <textarea id="command" placeholder="/spawn"></textarea>
 <p>One command per line, sent in order. Start with / for a command, anything else is sent as a chat message.</p>
-<label for="port">Port</label>
-<input id="port" placeholder="39401">
-<p>Needs the CommandDeck mod in Minecraft. Change the port only if you changed it in config/commanddeck.json.</p>
+<p>Needs the CommandDeck mod in Minecraft and you must be in a world. A check mark means sent, a warning means the game is not running or not in a world.</p>
 <script>
 let ws, uuid, settings = {};
 function connectElgatoStreamDeckSocket(port, inUUID, registerEvent, info, actionInfo) {
   uuid = inUUID;
   try { settings = JSON.parse(actionInfo).payload.settings || {}; } catch (e) {}
-  for (const k of ['command', 'port']) {
+  for (const k of ['command']) {
     const el = document.getElementById(k);
     el.value = settings[k] || '';
     el.addEventListener('input', () => { settings[k] = el.value; save(); });

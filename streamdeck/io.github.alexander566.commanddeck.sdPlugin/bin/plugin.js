@@ -1,11 +1,14 @@
 const net = require('net');
 const http = require('http');
 const crypto = require('crypto');
+const fs = require('fs');
+const path = require('path');
+const os = require('os');
 
 const args = {};
 for (let i = 2; i < process.argv.length - 1; i += 2) args[process.argv[i].replace(/^-/, '')] = process.argv[i + 1];
 
-const DEFAULT_PORT = 39401;
+const DIR = path.join(os.homedir(), '.commanddeck');
 const settings = new Map();
 
 function connect(port, onText) {
@@ -60,26 +63,46 @@ const ws = connect(Number(args.port), text => {
 });
 ws.onopen = () => ws.send({ event: args.registerEvent, uuid: args.pluginUUID });
 
-function post(port, command) {
+function request(game, method, p, data) {
   return new Promise(resolve => {
-    const body = Buffer.from(JSON.stringify({ command }), 'utf8');
-    const req = http.request({ host: '127.0.0.1', port, path: '/command', method: 'POST', timeout: 4000,
-      headers: { 'Content-Type': 'application/json', 'Content-Length': body.length, 'X-CommandDeck': '1' } },
-      res => { res.resume(); res.on('end', () => resolve(res.statusCode === 200)); });
-    req.on('error', () => resolve(false));
-    req.on('timeout', () => { req.destroy(); resolve(false); });
-    req.end(body);
+    const body = data ? Buffer.from(JSON.stringify(data), 'utf8') : null;
+    const headers = { 'X-CommandDeck': game.token };
+    if (body) { headers['Content-Type'] = 'application/json'; headers['Content-Length'] = body.length; }
+    const req = http.request({ host: '127.0.0.1', port: game.port, path: p, method, headers, timeout: 4000 }, res => {
+      let out = '';
+      res.on('data', c => out += c);
+      res.on('end', () => { let j = {}; try { j = JSON.parse(out); } catch {} resolve({ status: res.statusCode, body: j }); });
+    });
+    req.on('error', e => resolve({ status: 0, refused: e.code === 'ECONNREFUSED' }));
+    req.on('timeout', () => { req.destroy(); resolve({ status: 0 }); });
+    req.end(body || undefined);
   });
 }
 
+// Newest running game that is in a world; stale files (game closed or crashed) are removed.
+async function findGame() {
+  let files = [];
+  try { files = fs.readdirSync(DIR).filter(f => f.endsWith('.json')); } catch { return null; }
+  const games = [];
+  for (const f of files) {
+    const file = path.join(DIR, f);
+    let g;
+    try { g = JSON.parse(fs.readFileSync(file, 'utf8')); } catch { continue; }
+    const r = await request(g, 'GET', '/status');
+    if (r.refused) { try { fs.unlinkSync(file); } catch {} continue; }
+    if (r.status === 200 && r.body.inWorld) games.push(g);
+  }
+  games.sort((a, b) => (b.started || 0) - (a.started || 0));
+  return games[0] || null;
+}
+
 async function run(ctx, s) {
-  const port = Number(s.port) || DEFAULT_PORT;
   const lines = String(s.command || '').split(/\r?\n/).map(l => l.trim()).filter(Boolean);
-  if (!lines.length) { ws.send({ event: 'showAlert', context: ctx }); return; }
-  let ok = true;
+  const game = lines.length ? await findGame() : null;
+  let ok = !!game;
   for (let i = 0; i < lines.length && ok; i++) {
     if (i) await new Promise(r => setTimeout(r, 150));
-    ok = await post(port, lines[i]);
+    ok = (await request(game, 'POST', '/command', { command: lines[i] })).status === 200;
   }
   ws.send({ event: ok ? 'showOk' : 'showAlert', context: ctx });
 }

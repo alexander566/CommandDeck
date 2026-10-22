@@ -6,7 +6,6 @@ import com.google.gson.JsonParser;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpServer;
 import net.fabricmc.api.ClientModInitializer;
-import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
 import org.slf4j.Logger;
@@ -26,20 +25,22 @@ import java.util.concurrent.TimeUnit;
 
 /**
  * Listens on 127.0.0.1 for commands from the CommandDeck Stream Deck plugin and sends them as if typed in chat.
- * Requests carrying an Origin header are refused, so web pages in a browser cannot reach it.
+ * The OS picks a free port; port + a random token go into ~/.commanddeck/<pid>.json for the plugin to find.
+ * Requests need that token and must not carry an Origin header, so web pages in a browser cannot reach it.
  */
 public final class CommandDeck implements ClientModInitializer {
 
 	public static final Logger LOG = LoggerFactory.getLogger("CommandDeck");
-	private static final int DEFAULT_PORT = 39401;
 	private static final int MAX_BODY = 8192;
 	private static final Gson GSON = new Gson();
+	private static final Path DIR = Path.of(System.getProperty("user.home"), ".commanddeck");
+
+	private final String token = java.util.HexFormat.of().formatHex(new java.security.SecureRandom().generateSeed(16));
 
 	@Override
 	public void onInitializeClient() {
-		int port = loadPort();
 		try {
-			HttpServer server = HttpServer.create(new InetSocketAddress(InetAddress.getLoopbackAddress(), port), 0);
+			HttpServer server = HttpServer.create(new InetSocketAddress(InetAddress.getLoopbackAddress(), 0), 0);
 			server.createContext("/", this::handle);
 			server.setExecutor(Executors.newSingleThreadExecutor(r -> {
 				Thread t = new Thread(r, "CommandDeck");
@@ -47,35 +48,34 @@ public final class CommandDeck implements ClientModInitializer {
 				return t;
 			}));
 			server.start();
+			int port = server.getAddress().getPort();
+			Path file = DIR.resolve(ProcessHandle.current().pid() + ".json");
+			JsonObject o = new JsonObject();
+			o.addProperty("port", port);
+			o.addProperty("token", token);
+			o.addProperty("started", System.currentTimeMillis());
+			Files.createDirectories(DIR);
+			Files.writeString(file, GSON.toJson(o));
+			Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+				try {
+					Files.deleteIfExists(file);
+				} catch (IOException ignored) {
+				}
+			}));
 			LOG.info("Listening on 127.0.0.1:{}", port);
 		} catch (IOException e) {
-			LOG.error("Could not open 127.0.0.1:{} - is another game already running CommandDeck?", port, e);
+			LOG.error("Could not start CommandDeck", e);
 		}
-	}
-
-	private static int loadPort() {
-		Path file = FabricLoader.getInstance().getConfigDir().resolve("commanddeck.json");
-		try {
-			if (Files.exists(file)) {
-				JsonObject o = JsonParser.parseString(Files.readString(file)).getAsJsonObject();
-				if (o.has("port")) {
-					return o.get("port").getAsInt();
-				}
-			} else {
-				JsonObject o = new JsonObject();
-				o.addProperty("port", DEFAULT_PORT);
-				Files.writeString(file, GSON.toJson(o));
-			}
-		} catch (Exception e) {
-			LOG.warn("Bad config {}, using port {}", file, DEFAULT_PORT, e);
-		}
-		return DEFAULT_PORT;
 	}
 
 	private void handle(HttpExchange ex) throws IOException {
 		try (ex) {
 			if (ex.getRequestHeaders().containsKey("Origin")) {
 				reply(ex, 403, "browser requests are not allowed");
+				return;
+			}
+			if (!token.equals(ex.getRequestHeaders().getFirst("X-CommandDeck"))) {
+				reply(ex, 401, "bad token");
 				return;
 			}
 			String path = ex.getRequestURI().getPath();
@@ -88,10 +88,6 @@ public final class CommandDeck implements ClientModInitializer {
 			}
 			if (!path.equals("/command") || !ex.getRequestMethod().equals("POST")) {
 				reply(ex, 404, "not found");
-				return;
-			}
-			if (!ex.getRequestHeaders().containsKey("X-CommandDeck")) {
-				reply(ex, 400, "missing X-CommandDeck header");
 				return;
 			}
 			String command;
